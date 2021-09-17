@@ -31,5 +31,5 @@ jobs:
           image_name: 'yeyintdevsecopstestimage'
           cluster: 'devsecops-cluster-1'
           namespace: 'default'
-          deployment: 'mydevsecops-blog-1'
-          container: 'mydevsecops-blog'
+          deployment: 'devsecopstesting'
+          container: 'devsecopstesting'
