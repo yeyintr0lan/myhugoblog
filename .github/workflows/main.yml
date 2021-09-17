@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/docker-build-push-gcr-update-gke-deployment-action@v1.4
         with:
-          service_account: ${{ secrests.GCLOUD_AUTH}} 
+          service_account: ${{ secrets.GCLOUD_AUTH}} 
           zone: 'asia-southeast1-a'
           project_id: 'devsecopstesting'
           registry: 'asia.gcr.io'
