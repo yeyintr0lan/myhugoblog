@@ -22,14 +22,14 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      uses: actions/docker-build-push-gcr-update-gke-deployment-action@v1.4
-    with:
-      service_account: ${{ secrests.GCLOUD_AUTH}} 
-      zone: 'asia-southeast1-a'
-      project_id: 'devsecopstesting'
-      registry: 'asia.gcr.io'
-      image_name: 'yeyintdevsecopstestimage'
-      cluster: 'devsecops-cluster-1'
-      namespace: 'default'
-      deployment: 'mydevsecops-blog-1'
-      container: 'mydevsecops-blog'
+      - uses: actions/docker-build-push-gcr-update-gke-deployment-action@v1.4
+        with:
+          service_account: ${{ secrests.GCLOUD_AUTH}} 
+          zone: 'asia-southeast1-a'
+          project_id: 'devsecopstesting'
+          registry: 'asia.gcr.io'
+          image_name: 'yeyintdevsecopstestimage'
+          cluster: 'devsecops-cluster-1'
+          namespace: 'default'
+          deployment: 'mydevsecops-blog-1'
+          container: 'mydevsecops-blog'
