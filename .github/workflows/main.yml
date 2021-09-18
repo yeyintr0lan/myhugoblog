@@ -94,7 +94,7 @@ jobs:
         # Trivy --template option
         #template: # optional
         # GitHub access token used to create a issue
-        #token: 
+        token: ${{ secrets.GITHUB_TOKEN }}
         # Issue title
         #issue_title: # optional, default is Security Alert
         # Issue label (separated by commma)
