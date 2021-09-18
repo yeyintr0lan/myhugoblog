@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hugosite
+  labels:
+    app: hugosite
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: hugosite
+  template:
+    metadata:
+      labels:
+        app: hugosite
+    spec:
+      containers:
+        - name: hugosite
+          image: REGISTRY_HOSTNAME/spring2020-274107/IMAGE:GITHUB_SHA
+          ports:
+            - containerPort: 1313
