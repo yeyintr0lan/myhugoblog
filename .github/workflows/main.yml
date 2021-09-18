@@ -19,7 +19,7 @@ env:
   IMAGE_NAME: "hugosite"
 
   COMMAND: "ifconfig"
-  
+
 jobs:
   build_and_push:
     name: Setup, Build, Publish, and Deploy
@@ -68,4 +68,3 @@ jobs:
             -p 80:80 \
             --name $(echo $IMAGE_NAME) \
             $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
-    
