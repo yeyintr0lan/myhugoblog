@@ -39,7 +39,7 @@ jobs:
        #optional, default is usr/local
       
     - name: git-secret check
-      run: git-secrets --add 'password\s*=\s*.+' | git add . | git commit -m "Added"
+      run: git-secrets --install | git-secrets --add 'password\s*=\s*.+' | git add . | git commit -m "Added"
 
   build_and_push:
     
