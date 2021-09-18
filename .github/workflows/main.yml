@@ -102,7 +102,7 @@ jobs:
         # Issue assignee (separated by commma)
        #issue_assignee: # optional
         # Whether the action should fail if a vulnerability was found
-        fail_on_vulnerabilities: true # optional, default is false   
+        fail_on_vulnerabilities: false # optional, default is false   
         
     - name: Check password
       # You may pin to the exact commit or the version.
