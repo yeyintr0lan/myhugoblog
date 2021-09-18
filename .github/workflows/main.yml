@@ -30,7 +30,6 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v2
-
     # Setup gcloud CLI
     - uses: google-github-actions/setup-gcloud@94337306dda8180d967a56932ceb4ddcf01edae7
       with:
@@ -62,16 +61,27 @@ jobs:
       run: |-
         docker push "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
 
-    # Set up kustomize
-    - name: Set up Kustomize
-      run: |-
-        curl --location https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv4.2.0/kustomize_v4.2.0_linux_amd64.tar.gz | tar xz
-        chmod u+x ./kustomize
-
-    # Deploy the Docker image to the GKE cluster
-    - name: Deploy
-      run: |-
-        ./kustomize edit set image gcr.io/PROJECT_ID/IMAGE:TAG=gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
-        ./kustomize build ./gke_deploy | kubectl apply -f -
-        kubectl rollout status deployment/$DEPLOYMENT_NAME
-        kubectl get services -o wide
+    - name: docker-build-push-gcr-update-gke-deployment-action
+  # You may pin to the exact commit or the version.
+  # uses: shashank0202/docker-build-push-gcr-update-gke-deployment-action@a3c865ea7eeddc9aa68921cf6e7bff13d6cb5d6a
+      uses: shashank0202/docker-build-push-gcr-update-gke-deployment-action@1.4
+      with:
+    # Base64 encoded service account JSON from GCP IAM service account
+          service_account: ${{ secrets.GKE_SA_KEY }}
+          # Cluster Zone
+          zone: asia-southeast1-a 
+          # Project ID from GCP
+          project_id: devsecopstesting
+          # GCR registry host, It could be gcr.io/us.gcr.io/eu.gcr.io/asia.gcr.io
+          registry: gcr.io
+          # Name of the image
+          image_name: hugosite
+          # Name of GKE cluster
+          cluster: devsecops-cluster-1
+          # Namespace of the deployment
+          namespace: default
+          # Name of the deployment which needs to be update
+          deployment: mydevsecopsblog
+          # Name of container whose image needs to be updated
+          container: hugoapp
+    
