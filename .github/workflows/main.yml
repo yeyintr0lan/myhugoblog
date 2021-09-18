@@ -1,8 +1,14 @@
 name: cloudrun-deploy
+# Controls when the workflow will run
 on:
+  # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches:
-      - main
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 jobs:
   setup-build-publish-deploy:
     name: Setup, Build, Publish, and Deploy
