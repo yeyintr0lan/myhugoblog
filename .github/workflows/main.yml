@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Push GCR and Build Deploy to GKE
+name: Push and Deploy at Digital Ocean
 
 on:
 # Triggers the workflow on push or pull request events but only for the master branch
@@ -14,74 +14,58 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
 env:
-  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
-  GKE_CLUSTER: devsecops-cluster-1    # Add your cluster name here.
-  GKE_ZONE: asia-southeast1-a   # Add your cluster zone here.
-  DEPLOYMENT_NAME: mydevsecopsblog # Add your deployment name here.
-  IMAGE: hugosite
+  REGISTRY: "registry.digitalocean.com/devsecopstest"
+  IMAGE_NAME: "hugosite"
 
+  COMMAND: "ifconfig"
+  
 jobs:
-  setup-build-publish-deploy:
+  build_and_push:
     name: Setup, Build, Publish, and Deploy
     runs-on: ubuntu-latest
     steps:
 
     - name: Checkout
       uses: actions/checkout@v2
-    # Setup gcloud CLI
-    - uses: google-github-actions/setup-gcloud@94337306dda8180d967a56932ceb4ddcf01edae7
+    - name: Build container image
+      run: docker build -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7) .
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
       with:
-        service_account_key: ${{ secrets.GKE_SA_KEY }}
-        project_id: ${{ secrets.GKE_PROJECT }}
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-    # Configure docker to use the gcloud command-line tool as a credential helper
-    - run: |-
-        gcloud --quiet auth configure-docker
+    - name: Log in to DigitalOcean Container Registry with short-lived credentials
+      run: doctl registry login --expiry-seconds 600
 
-    # Get the GKE credentials so we can deploy to the cluster
-    - uses: google-github-actions/get-gke-credentials@fb08709ba27618c31c09e014e1d8364b02e5042e
-      with:
-        cluster_name: ${{ env.GKE_CLUSTER }}
-        location: ${{ env.GKE_ZONE }}
-        credentials: ${{ secrets.GKE_SA_KEY }}
+    - name: Push image to DigitalOcean Container Registry
+      run: docker push $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
 
-    # Build the Docker image
-    - name: Build
-      run: |-
-        docker build \
-          --tag "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA" \
-          --build-arg GITHUB_SHA="$GITHUB_SHA" \
-          --build-arg GITHUB_REF="$GITHUB_REF" \
-          .
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    needs: build_and_push
 
-    # Push the Docker image to Google Container Registry
-    - name: Publish
-      run: |-
-        docker push "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
+    steps:
+      - name: Deploy to Digital Ocean droplet via SSH action
+        uses: appleboy/ssh-action@v0.1.3
+        with:
+          HOST: ${{ secrets.HOST }}
+          USERNAME: ${{ secrets.USERNAME }}
+          KEY: ${{ secrets.SSHKEY }}
+          envs: IMAGE_NAME,REGISTRY,GITHUB_SHA,COMMAND
+          script: |
+            docker login $REGISTRY -u ${{ secrets.DIGITAL_OCEAN_DOCKER_KEY }} -p ${{ secrets.DIGITAL_OCEAN_DOCKER_KEY }}
+            # Stop running container
+            docker stop $(echo $IMAGE_NAME)
 
-    - name: docker-build-push-gcr-update-gke-deployment-action
-  # You may pin to the exact commit or the version.
-  # uses: shashank0202/docker-build-push-gcr-update-gke-deployment-action@a3c865ea7eeddc9aa68921cf6e7bff13d6cb5d6a
-      uses: shashank0202/docker-build-push-gcr-update-gke-deployment-action@1.4
-      with:
-    # Base64 encoded service account JSON from GCP IAM service account
-          service_account: ${{ secrets.GKE_SA_KEY }}
-          # Cluster Zone
-          zone: asia-southeast1-a 
-          # Project ID from GCP
-          project_id: devsecopstesting
-          # GCR registry host, It could be gcr.io/us.gcr.io/eu.gcr.io/asia.gcr.io
-          registry: gcr.io
-          # Name of the image
-          image_name: hugosite
-          # Name of GKE cluster
-          cluster: devsecops-cluster-1
-          # Namespace of the deployment
-          namespace: default
-          # Name of the deployment which needs to be update
-          deployment: hugosite
-          # Name of container whose image needs to be updated
-          container: hugosite-sha256-1
+            # Remove old container
+            docker rm $(echo $IMAGE_NAME)
+
+            # Run a new container from a new image
+            docker run -d \
+            --restart always \
+            -p 80:80 \
+            --name $(echo $IMAGE_NAME) \
+            $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
     
