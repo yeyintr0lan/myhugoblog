@@ -70,7 +70,12 @@ jobs:
         #prefix for installation
        prefix: ''
        #optional, default is usr/local
-      
+       
+    - name: Check password
+      # You may pin to the exact commit or the version.
+      # uses: AlicanAkkus/pinder-action@c488da46c0e9ec52e84811f897fd4a5aaf0b89a6
+      uses: AlicanAkkus/pinder-action@1.0.0
+    
     #- name: git-secret check
     #  run: git-secrets --install | git-secrets --add 'password\s*=\s*.+' | git add . | git commit -m "Added"
 
