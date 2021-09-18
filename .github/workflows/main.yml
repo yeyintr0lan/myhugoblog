@@ -28,7 +28,7 @@ jobs:
           zone: 'asia-southeast1-a'
           project_id: 'devsecopstesting'
           registry: 'asia.gcr.io'
-          image_name: 'Dockerfile'
+          image_name: 'devsecopstesting'
           cluster: 'devsecops-cluster-1'
           namespace: 'default'
           deployment: 'devsecopstesting'
