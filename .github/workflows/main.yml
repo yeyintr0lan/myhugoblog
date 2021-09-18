@@ -19,7 +19,7 @@ env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
   GKE_CLUSTER: devsecops-cluster-1    # Add your cluster name here.
   GKE_ZONE: asia-southeast1-a   # Add your cluster zone here.
-  DEPLOYMENT_NAME: mydevsecopsblog # Add your deployment name here.
+  DEPLOYMENT_NAME: hugosite # Add your deployment name here.
   IMAGE: hugosite
 
 jobs:
@@ -30,6 +30,37 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v2
+    
+    # Setup gcloud CLI
+    - uses: google-github-actions/setup-gcloud@94337306dda8180d967a56932ceb4ddcf01edae7
+      with:
+        service_account_key: ${{ secrets.GKE_SA_KEY }}
+        project_id: ${{ secrets.GKE_PROJECT }}
+
+    # Configure docker to use the gcloud command-line tool as a credential helper
+    - run: |-
+        gcloud --quiet auth configure-docker
+
+    # Get the GKE credentials so we can deploy to the cluster
+    - uses: google-github-actions/get-gke-credentials@fb08709ba27618c31c09e014e1d8364b02e5042e
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+        credentials: ${{ secrets.GKE_SA_KEY }}
+
+    # Build the Docker image
+    - name: Build
+      run: |-
+        docker build \
+          --tag "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA" \
+          --build-arg GITHUB_SHA="$GITHUB_SHA" \
+          --build-arg GITHUB_REF="$GITHUB_REF" \
+          .
+
+    # Push the Docker image to Google Container Registry
+    - name: Publish
+      run: |-
+        docker push "gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
     
     - name: docker-build-push-gcr-update-gke-deployment-action
   # You may pin to the exact commit or the version.
@@ -45,7 +76,7 @@ jobs:
           # GCR registry host, It could be gcr.io/us.gcr.io/eu.gcr.io/asia.gcr.io
           registry: gcr.io
           # Name of the image
-          image_name: hugosite
+          image_name: $IMAGE:$GITHUB_SHA
           # Name of GKE cluster
           cluster: devsecops-cluster-1
           # Namespace of the deployment
