@@ -55,6 +55,7 @@ jobs:
           KEY: ${{ secrets.SSHKEY }}
           envs: IMAGE_NAME,REGISTRY,GITHUB_SHA,COMMAND
           script: |
+            docker login $REGISTRY -u ${{ secrets.DIGITAL_OCEAN_DOCKER_KEY }} -p ${{ secrets.DIGITAL_OCEAN_DOCKER_KEY }}
             # Stop running container
             docker stop $(echo $IMAGE_NAME)
 
@@ -65,7 +66,6 @@ jobs:
             docker run -d \
             --restart always \
             -p 80:80 \
-            --env-file .env \
             --name $(echo $IMAGE_NAME) \
             $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
     
