@@ -21,13 +21,26 @@ env:
   COMMAND: "ifconfig"
   
 jobs:
-  build_and_push:
-    name: Setup, Build, Publish, and Deploy
+  security_test:
+    name: sensitive info check
     runs-on: ubuntu-latest
     steps:
-
     - name: Checkout
       uses: actions/checkout@v2
+      
+    - name: git-secret check
+      run: git-secrets --add 'password\s*=\s*.+' | git add . | git commit -m "Added"
+
+  build_and_push:
+    name: Docker build and push
+    runs-on: ubuntu-latest
+    steps:
+      
+    - name: Checkout
+      uses: actions/checkout@v2
+    #It is an official GitHub Action used to check-out a repository so a workflow can access it.
+    # By default, it clones your current repository ({{ github.repository }}) but you can also use this action to clone a different repository, 
+    # and specify additionnal parameters like token, branch, path etc...
     - name: Build container image
       run: docker build -t $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7) .
     - name: Install doctl
@@ -40,6 +53,7 @@ jobs:
 
     - name: Push image to DigitalOcean Container Registry
       run: docker push $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)
+      
 
   deploy:
     runs-on: ubuntu-latest
