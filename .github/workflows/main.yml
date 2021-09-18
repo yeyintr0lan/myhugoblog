@@ -81,7 +81,7 @@ jobs:
           # Namespace of the deployment
           namespace: default
           # Name of the deployment which needs to be update
-          deployment: mydevsecopsblog
+          deployment: hugosite
           # Name of container whose image needs to be updated
-          container: hugoapp
+          container: hugosite
     
